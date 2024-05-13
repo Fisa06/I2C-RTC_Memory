@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "STM8",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/../SPL/**",
+                "/usr/share/sdcc/include",
+                "/usr/local/stow/sdcc-4.2.0/share/sdcc/include",
+                "C:/Program Files/SDCC/include/**",
+                "inc",
+                "../SPL/inc/",
+                "../inc",
+                "SPL/inc/"
+            ],
+            "defines": [
+                "STM8S208",
+                "_SDCC_"
+            ]
+        }
+    ],
+    "version": 4
+}
