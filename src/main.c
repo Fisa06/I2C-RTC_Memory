@@ -45,7 +45,7 @@ int main(void)
             time = milis();
 
             // čas
-            err = swi2c_read_buf(0x68, 0x00, precteno, 7);
+            err = swi2c_read_buf(0x68<<1, 0x00, precteno, 7);
             printf("%d%d.%d%d. 20%d%d %d%d:%d%d:%d%d \n",       // v RTC obvodu je čas uložen v BCD
                    precteno[4] >> 4, precteno[4] & 0x0F,
                    precteno[5] >> 4, precteno[5] & 0x0F,
