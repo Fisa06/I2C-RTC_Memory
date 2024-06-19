@@ -142,7 +142,7 @@ int main(void)
 
 
     while (1) {
-        if (milis() - time > 500) {
+        if (milis() - time > 100) {
             time = milis();
 
             swi2c_read_buf(0x68 << 1, 0x00, precteno, 7);
