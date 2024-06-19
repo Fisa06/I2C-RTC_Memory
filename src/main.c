@@ -9,6 +9,9 @@
 #include <string.h>
 #include "delay.h"
 
+volatile bool time_received_flag = false;
+volatile uint8_t time_data[3] = {0, 0, 0};
+
 #define RTC_ADDR 0x68 << 1
 #define DIN_PORT GPIOB
 #define DIN_PIN GPIO_PIN_4
@@ -16,6 +19,34 @@
 #define CS_PIN GPIO_PIN_3
 #define CLK_PORT GPIOB
 #define CLK_PIN GPIO_PIN_2
+void char_process(char c)
+{
+    static uint8_t i = 0;
+
+    if (c == '\n') {
+        printf("\n Bylo zadáno toto: >%s<\n\n", string);
+
+        // proměnnou string nakopíruju do proměnné motd
+        uint8_t k = 0;
+        while (k < 80) {
+            motd[k] = string[k];
+            if (string[k++] == '\0')
+                break;
+        }
+        unsigned char *u = string, *v = motd;
+        string[79] = '\0';
+        while ((  *v++ = *u++));
+
+        i = 0;
+        string[i] = '\0';
+    } else if (c == '\r') {
+        return;
+    } else {
+        string[i++] = c;
+        string[i] = '\0';
+    }
+}
+
 
 void display(uint8_t adress, uint8_t data)
 {
@@ -62,7 +93,7 @@ void display_setup(void)
 {
     display(DECODE_MODE, 0b11011011);  // zapnutí znakové sady na jednotlivých digitech
     display(SCAN_LIMIT,7);             // chci všech 8 cifer
-    display(INTENSITY, 1);             // chci intenzitu 1, aby to málo svítilo
+    display(INTENSITY, 9);             // chci intenzitu 1, aby to málo svítilo
     display(DISPLAY_TEST, DISPLAY_TEST_OFF);
     display(SHUTDOWN,SHUTDOWN_ON);
     display(DIGIT0,0x0F);
@@ -76,44 +107,14 @@ void display_setup(void)
 }
 void sync_time_from_serial(void)
 {
-        uint32_t time2 = 0;
-
+    while (!time_received_flag) {}
     uint8_t time_data[3];
-
-    // Read hours, minutes, and seconds from the serial port
-
-        while (UART1_GetFlagStatus(UART1_FLAG_RXNE) == RESET){
-            if (milis() - time2 > 500) {
-                time2 = milis();
-                REVERSE(LED);
-            }
-        };
-        time_data[0] = getchar();
-
-        while (UART1_GetFlagStatus(UART1_FLAG_RXNE) == RESET){
-            if (milis() - time2 > 500) {
-                time2 = milis();
-                REVERSE(LED);
-
-            }}; // Wait for data
-        time_data[i] = getchar();
-
-        while (UART1_GetFlagStatus(UART1_FLAG_RXNE) == RESET){
-            if (milis() - time2 > 500) {
-                time2 = milis();
-                REVERSE(LED);
-
-            }}; // Wait for data
-        time_data[i] = getchar();
-
-
-
-    // Write the time data to the RTC
     uint8_t status = swi2c_write_buf(RTC_ADDR, 0x00, time_data, 3);
 
     if (status != 0) {
         printf("Failed to update RTC time\n");
     }
+    time_received_flag = false;
 }
 
 void init(void)
@@ -166,7 +167,7 @@ int main(void)
     while(!PUSH(BTN));
     printf("Zápis do RTC StatusCode: %X\n",  swi2c_write_buf(0x68 <<1 , 0x00, zapsano, 7));
 */ display_setup();
-    sync_time_from_serial();
+    //sync_time_from_serial();
 
 
 
@@ -193,5 +194,18 @@ int main(void)
 
 
         }
+        if (PUSH(BTN)) {
+            HIGH(LED);
+            sync_time_from_serial();
+            LOW(LED);
+        }
     }
+}
+
+
+
+
+INTERRUPT_HANDLER(UART1_RX_IRQHandler, 18)
+{
+    char_process(UART1_ReceiveData8());
 }

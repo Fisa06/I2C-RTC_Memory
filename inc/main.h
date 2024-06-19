@@ -35,7 +35,9 @@
 #define BTN_PORT GPIOE
 #define BTN_PIN  GPIO_PIN_4
 #endif
-
+extern volatile bool time_received_flag;
+extern volatile uint8_t time_data[3];
+void char_process(char c);
 // functions
 void init(void);
 
